@@ -35,6 +35,18 @@ async function handle(request) {
     return withCORS(proxySigned(request))
   }
 
+  if (url.pathname === "/proxyFiatOrders" && request.method === "POST") {
+    return withCORS(proxyFiatOrders(request));
+  }
+
+  if (url.pathname === "/proxyFiatPayments" && request.method === "POST") {
+    return withCORS(proxyFiatPayments(request));
+  }
+
+  if (url.pathname === "/proxyOpenOrders" && request.method === "POST") {
+    return withCORS(proxyOpenOrders(request));
+  }
+
   // 4) Not found
   return new Response("Not found", {
     status: 404,
@@ -124,4 +136,52 @@ async function proxySigned(request) {
     status: resp.status,
     headers: { "Content-Type": "application/json" }
   })
+}
+
+async function proxyFiatOrders(request) {
+  const { apiKey, queryString } = await request.json();
+
+  // Endpoint is signed → needs the query-string you built client-side
+  const url = `https://api.binance.com/sapi/v1/fiat/orders?${queryString}`;
+
+  const resp = await fetch(url, {
+    method  : "GET",
+    headers : { "X-MBX-APIKEY": apiKey }
+  });
+
+  const body = await resp.text();
+  return new Response(body, {
+    status  : resp.status,
+    headers : { "Content-Type": "application/json" }
+  });
+}
+
+async function proxyFiatPayments(request) {
+  const { apiKey, queryString } = await request.json();   // signed QS comes from browser
+  const url  = `https://api.binance.com/sapi/v1/fiat/payments?${queryString}`;
+
+  const resp = await fetch(url, {
+    method : "GET",
+    headers: { "X-MBX-APIKEY": apiKey }
+  });
+
+  return new Response(await resp.text(), {
+    status : resp.status,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+async function proxyOpenOrders(request) {
+  const { apiKey, queryString } = await request.json();          // signed QS arrives from the client
+  const url  = `https://api.binance.com/api/v3/openOrders?${queryString}`;
+
+  const resp = await fetch(url, {
+    method : "GET",
+    headers: { "X-MBX-APIKEY": apiKey }
+  });
+
+  return new Response(await resp.text(), {
+    status : resp.status,
+    headers: { "Content-Type": "application/json" }
+  });
 }
