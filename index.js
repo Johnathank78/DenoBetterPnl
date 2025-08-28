@@ -109,15 +109,16 @@ async function createListenKey(request) {
 }
 
 async function keepAlive(request) {
-  const { apiKey, listenKey } = await request.json();
-  const resp = await fetch(`https://api.binance.com/api/v3/userDataStream?listenKey=${encodeURIComponent(listenKey)}`, {
-    method: "PUT",
-    headers: { "X-MBX-APIKEY": apiKey }
-  });
-  return new Response('{"ok":true}', {
-    status: resp.ok ? 200 : resp.status,
+  const { apiKey, listenKey } = await request.json()
+  const resp = await fetch(
+    `https://api.binance.com/api/v3/userDataStream?listenKey=${encodeURIComponent(listenKey)}`,
+    { method: "PUT", headers: { "X-MBX-APIKEY": apiKey } }
+  )
+  const body = await resp.text()
+  return new Response(body || '{"ok":true}', {
+    status: resp.status,
     headers: { "Content-Type": "application/json" }
-  });
+  })
 }
 
 async function proxySigned(request) {
