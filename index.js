@@ -69,6 +69,7 @@ async function withCORS(responsePromise) {
   })
 }
 
+//
 //  PUBLIC‐REST PROXY
 //
 async function proxyPublic(request) {
